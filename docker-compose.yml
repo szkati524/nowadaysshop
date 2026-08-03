@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: shop-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: shop_user
+      POSTGRES_PASSWORD: shop_password
+      POSTGRES_MULTIPLE_DATABASES: "user_db,catalog_db"  
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh:ro
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: shop-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "ShopCluster"
+      CASSANDRA_DC: "datacenter1"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch" 
+      MAX_HEAP_SIZE: "512M"
+      HEAP_NEWSIZE: "100M"
+    volumes:
+      - cassandra_data:/var/lib/cassandra 
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10 
+      start_period: 40s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: shop-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq 
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: shop-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"  
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@shop.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - shop-network
+    depends_on:
+      - postgres
+
+networks:
+  shop-network:
+    driver: bridge
+    name: shop-network
+
+volumes:
+  postgres_data:
+  cassandra_data:
+  rabbitmq_data:
