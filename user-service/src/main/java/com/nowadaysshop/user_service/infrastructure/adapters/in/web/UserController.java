@@ -33,7 +33,7 @@ public class UserController {
     public ResponseEntity<BigDecimal> getBalance(@PathVariable UUID id){
         return ResponseEntity.ok(walletUseCase.getBalance(id));
     }
-    @GetMapping("/{id}/deposit")
+    @PostMapping("/{id}/deposit")
     public ResponseEntity<Void> deposit(@PathVariable UUID id, @Valid @RequestBody WalletOperationRequest request){
         walletUseCase.deposit(id,request.amount());
         return ResponseEntity.ok().build();
