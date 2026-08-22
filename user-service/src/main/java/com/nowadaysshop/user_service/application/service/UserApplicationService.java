@@ -2,8 +2,11 @@ package com.nowadaysshop.user_service.application.service;
 
 import com.nowadaysshop.user_service.application.ports.in.WalletUseCase;
 import com.nowadaysshop.user_service.application.ports.out.UserRepositoryPort;
+import com.nowadaysshop.user_service.config.RabbitMQConfig;
+import com.nowadaysshop.user_service.domain.event.UserRegisteredEvent;
 import com.nowadaysshop.user_service.domain.model.User;
 import com.nowadaysshop.user_service.domain.service.WalletDomainService;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -12,9 +15,12 @@ public class UserApplicationService implements WalletUseCase {
     private final UserRepositoryPort userRepositoryPort;
     private final WalletDomainService walletDomainService;
 
-    public UserApplicationService(UserRepositoryPort userRepositoryPort, WalletDomainService walletDomainService) {
+    private final RabbitTemplate rabbitTemplate;
+
+    public UserApplicationService(UserRepositoryPort userRepositoryPort, WalletDomainService walletDomainService, RabbitTemplate rabbitTemplate) {
         this.userRepositoryPort = userRepositoryPort;
         this.walletDomainService = walletDomainService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -23,8 +29,20 @@ public class UserApplicationService implements WalletUseCase {
             throw new IllegalArgumentException("Użytkownik o podanym emailu już istnieje: " + email);
         });
 User newUser = new User(null,email,firstName,lastName,null);
-return userRepositoryPort.save(newUser);
+        User savedUser = userRepositoryPort.save(newUser);
+
+
+        UserRegisteredEvent event = new UserRegisteredEvent(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getFirstName()
+        );
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "user.registered", event);
+
+
+        return savedUser;
     }
+
 
     @Override
     public User getUserById(UUID userId) {

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -27,10 +28,12 @@ public class UserApplicationServiceTest {
 
     private UserApplicationService userApplicationService;
 
+    private RabbitTemplate rabbitTemplate;
+
     @BeforeEach
     void setUp(){
         WalletDomainService walletDomainService = new WalletDomainService();
-        userApplicationService = new UserApplicationService(userRepositoryPort,walletDomainService);
+        userApplicationService = new UserApplicationService(userRepositoryPort,walletDomainService, rabbitTemplate);
 
     }
     @Test

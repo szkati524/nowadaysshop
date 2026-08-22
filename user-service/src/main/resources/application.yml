@@ -4,12 +4,24 @@ server:
 spring:
   application:
     name: user-service
+
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/user_db
+    url: jdbc:postgresql://localhost:5433/user_db?sslmode=disable
     username: shop_user
     password: shop_password
     driver-class-name: org.postgresql.Driver
+
+
+  cassandra:
+    contact-points: localhost
+    port: 9042
+    keyspace-name: user_keyspace
+    local-datacenter: datacenter1
+    schema-action: create_if_not_exists
+
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true

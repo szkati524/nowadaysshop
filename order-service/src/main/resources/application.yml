@@ -1,0 +1,18 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: order-service
+  cassandra:
+    keyspace-name: order_keyspace
+    contact-points: localhost:9042
+    local-datacenter: datacenter1
+    schema-action: create_if_not_exists
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

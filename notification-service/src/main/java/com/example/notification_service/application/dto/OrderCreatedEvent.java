@@ -1,0 +1,7 @@
+package com.example.notification_service.application.dto;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record OrderCreatedEvent(UUID orderId, UUID userId, BigDecimal totalAmount) {
+}
