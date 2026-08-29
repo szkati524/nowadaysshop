@@ -5,6 +5,7 @@ import com.nowadaysshop.user_service.application.service.UserApplicationService;
 import com.nowadaysshop.user_service.domain.exception.InSufficientFundsException;
 import com.nowadaysshop.user_service.domain.model.User;
 import com.nowadaysshop.user_service.domain.model.Wallet;
+import com.nowadaysshop.user_service.domain.roles.Role;
 import com.nowadaysshop.user_service.domain.service.WalletDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -26,34 +28,48 @@ public class UserApplicationServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
 
-    private UserApplicationService userApplicationService;
-
+    @Mock
     private RabbitTemplate rabbitTemplate;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    private UserApplicationService userApplicationService;
+
     @BeforeEach
-    void setUp(){
+    void setUp() {
         WalletDomainService walletDomainService = new WalletDomainService();
-        userApplicationService = new UserApplicationService(userRepositoryPort,walletDomainService, rabbitTemplate);
-
+        userApplicationService = new UserApplicationService(
+                userRepositoryPort,
+                walletDomainService,
+                rabbitTemplate,
+                passwordEncoder
+        );
     }
+
     @Test
-    void shouldDepositMoneySuccessfullyTest(){
+    void shouldDepositMoneySuccessfullyTest() {
         UUID userId = UUID.randomUUID();
-        User user = new User(userId,"test@shop.com","Jan","Kowalski",new Wallet(null, BigDecimal.valueOf(100)));
+        User user = new User(userId, "test@shop.com", "Jan", "Kowalski", "encoded_pass", Role.ROLE_USER, new Wallet(null, BigDecimal.valueOf(100)));
         when(userRepositoryPort.findById(userId)).thenReturn(Optional.of(user));
 
-        userApplicationService.deposit(userId,BigDecimal.valueOf(50));
-        assertEquals(BigDecimal.valueOf(150),user.getWallet().getBalance());
-        verify(userRepositoryPort,times(1)).save(user);
+        userApplicationService.deposit(userId, BigDecimal.valueOf(50));
+
+        assertEquals(0, BigDecimal.valueOf(150).compareTo(user.getWallet().getBalance()));
+        verify(userRepositoryPort, times(1)).save(user);
     }
+
     @Test
-    void shouldThrowExceptionWhenWithdrawalExceedsBalanceTest(){
+    void shouldThrowExceptionWhenWithdrawalExceedsBalanceTest() {
         UUID userId = UUID.randomUUID();
-        User user = new User(userId,"test@shop.com","Jan","Kowalski",new Wallet(null,BigDecimal.valueOf(100)));
+        User user = new User(userId, "test@shop.com", "Jan", "Kowalski", "encoded_pass", Role.ROLE_USER, new Wallet(null, BigDecimal.valueOf(100)));
         when(userRepositoryPort.findById(userId)).thenReturn(Optional.of(user));
+
         assertThrows(InSufficientFundsException.class, () -> {
-            userApplicationService.withdraw(userId,BigDecimal.valueOf(150));
+            userApplicationService.withdraw(userId, BigDecimal.valueOf(150));
         });
-        verify(userRepositoryPort,never()).save(user);
+
+        verify(userRepositoryPort, never()).save(user);
     }
 }
+

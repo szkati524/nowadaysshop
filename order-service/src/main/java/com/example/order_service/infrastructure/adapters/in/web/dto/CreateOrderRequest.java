@@ -6,8 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CreateOrderRequest(
-        @NotNull(message = "ID użytkownika jest wymagane")
-        UUID userId,
+
         @NotNull(message = "ID produktu jest wymagane")
         UUID productId,
         @NotNull(message = "Ilość jest wymagana")

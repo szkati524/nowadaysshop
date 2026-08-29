@@ -6,6 +6,7 @@ import com.nowadaysshop.user_service.domain.service.WalletDomainService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DomainConfig {
@@ -17,8 +18,9 @@ public class DomainConfig {
     public UserApplicationService userApplicationService(
             UserRepositoryPort userRepositoryPort,
             WalletDomainService walletDomainService,
-            RabbitTemplate rabbitTemplate
+            RabbitTemplate rabbitTemplate,
+            PasswordEncoder passwordEncoder
     ) {
-        return new UserApplicationService(userRepositoryPort,walletDomainService, rabbitTemplate);
+        return new UserApplicationService(userRepositoryPort,walletDomainService, rabbitTemplate, passwordEncoder);
     }
 }

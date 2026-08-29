@@ -6,14 +6,13 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
-
+@RestController
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderUseCase orderUseCase;
@@ -23,8 +22,18 @@ public class OrderController {
         this.orderUseCase = orderUseCase;
     }
     @PostMapping
-    public ResponseEntity<Order> createOrder(@Valid @RequestBody CreateOrderRequest request){
-        Order order = orderUseCase.createOrder(request.userId(),request.productId(),request.quantity());
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody CreateOrderRequest request, Principal principal) {
+
+        UUID userId = UUID.fromString(principal.getName());
+
+
+
+        Order order = orderUseCase.createOrder(
+                userId,
+                request.productId(),
+                request.quantity()
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
     @GetMapping("/{id}")

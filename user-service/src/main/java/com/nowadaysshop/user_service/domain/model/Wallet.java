@@ -1,5 +1,7 @@
 package com.nowadaysshop.user_service.domain.model;
 
+import com.nowadaysshop.user_service.domain.exception.InSufficientFundsException;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -20,6 +22,9 @@ public class Wallet {
     public void withdraw(BigDecimal amount){
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0){
             throw new IllegalArgumentException("Kwota wypłaty musi być większa od 0");
+        }
+        if (amount.compareTo(this.balance) > 0){
+            throw new InSufficientFundsException("Niewystarczające środki na koncie");
         }
         this.balance = this.balance.subtract(amount);
     }

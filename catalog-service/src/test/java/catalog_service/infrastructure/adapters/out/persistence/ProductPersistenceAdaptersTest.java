@@ -4,8 +4,9 @@ import catalog_service.domain.model.Product;
 import catalog_service.infrastructure.adapters.out.persistence.entity.ProductPersistenceAdapter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -30,9 +31,9 @@ public class ProductPersistenceAdaptersTest {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("test_catalog_db")
             .withUsername("test")
-            .withPassword("test")
+            .withPassword("test");
 
-            @DynamicPropertySource
+    @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry){
                 registry.add("spring.datasource.url", postgres::getJdbcUrl);
                 registry.add("spring.datasource.username", postgres::getUsername);

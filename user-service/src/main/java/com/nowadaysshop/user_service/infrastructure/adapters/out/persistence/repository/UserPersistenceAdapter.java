@@ -3,6 +3,7 @@ package com.nowadaysshop.user_service.infrastructure.adapters.out.persistence.re
 import com.nowadaysshop.user_service.application.ports.out.UserRepositoryPort;
 import com.nowadaysshop.user_service.domain.model.User;
 import com.nowadaysshop.user_service.domain.model.Wallet;
+import com.nowadaysshop.user_service.domain.roles.Role;
 import com.nowadaysshop.user_service.infrastructure.adapters.out.persistence.entity.UserEntity;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,8 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
+                user.getPassword(),
+                user.getRole(),
                 user.getWallet().getId(),
                 user.getWallet().getBalance()
 
@@ -48,12 +51,13 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     }
     private User mapToDomain(UserEntity entity){
         Wallet wallet = new Wallet(entity.getWalletId(),entity.getBalance());
+        Role domainRole = entity.getRole() != null ? Role.valueOf(entity.getRole()) : null;
         return new User(
                 entity.getId(),
                 entity.getEmail(),
                 entity.getFirstName(),
                 entity.getLastName(),
-                wallet
+                entity.getPassword(), domainRole, wallet
         );
     }
 }

@@ -22,7 +22,7 @@ public class UserController {
     }
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequest request) {
-        User createdUser = walletUseCase.createUser(request.email(), request.firstName(), request.lastName());
+        User createdUser = walletUseCase.createUser(request.email(), request.firstName(), request.lastName(),request.Password(),request.role());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
     @GetMapping("/{id}")
