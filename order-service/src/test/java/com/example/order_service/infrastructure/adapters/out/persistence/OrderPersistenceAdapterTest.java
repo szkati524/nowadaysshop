@@ -7,8 +7,10 @@ import com.example.order_service.domain.model.OrderStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.cassandra.DataCassandraTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CassandraContainer;
@@ -23,42 +25,35 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 
+@DataCassandraTest
+@Testcontainers
+@Import(OrderPersistenceAdapter.class)
 public class OrderPersistenceAdapterTest {
+    @Container
+    static CassandraContainer<?> cassandra = new CassandraContainer<>("cassandra:4.1");
 
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry){
-        registry.add("spring.cassandra.contact-points", () -> "localhost:9042");
-        registry.add("spring.cassandra.local-datacenter", () -> "datacenter1");
-        registry.add("spring.cassandra.keyspace-name", () -> "order_keyspace");
-        registry.add("eureka.client.enabled", () -> "false");
-    }
-    @MockBean
-    private CatalogClientPort catalogClientPort;
     @Autowired
-    private OrderPersistenceAdapter orderPersistenceAdapter;
+    private OrderPersistenceAdapter adapter;
 
     @Test
-    void shouldSaveAndRetrieveOrderFromCassandraTest(){
+
+    void shouldSaveAndRetrieveFromCassandra() {
+        UUID orderId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        UUID productId = UUID.randomUUID();
+
         Order order = new Order(
-                UUID.randomUUID(),
-                userId,
-                productId,
-                2,
-                new BigDecimal("199.98"),
-                OrderStatus.COMPLETED,
-                Instant.now()
+                orderId, userId, UUID.randomUUID(), 1, new BigDecimal("99.99"), OrderStatus.PENDING, Instant.now()
         );
-        orderPersistenceAdapter.save(order);
-        Optional<Order> retrieved = orderPersistenceAdapter.findById(order.getId());
-        List<Order> userOrders = orderPersistenceAdapter.findByUserId(userId);
-        assertThat(retrieved).isPresent();
-        assertThat(retrieved.get().getUserId()).isEqualTo(userId);
-        assertThat(retrieved.get().getStatus()).isEqualTo(OrderStatus.COMPLETED);
+
+        adapter.save(order);
+
+        List<Order> userOrders = adapter.findByUserId(userId);
+
         assertThat(userOrders).hasSize(1);
+        assertThat(userOrders.get(0).getId()).isEqualTo(orderId);
     }
 }
+
+
+

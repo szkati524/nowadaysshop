@@ -1,6 +1,7 @@
 package com.example.order_service.infrastructure.adapters.out.rest;
 
 import com.example.order_service.application.ports.out.UserClientPort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -12,8 +13,8 @@ import java.util.UUID;
 public class UserRestClientAdapter implements UserClientPort {
     private final RestClient restClient;
 
-    public UserRestClientAdapter(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl("http://USER-SERVICE").build();
+    public UserRestClientAdapter(RestClient.Builder builder, @Value("${services.user.url:http://USER-SERVICE}") String baseUrl) {
+        this.restClient = builder.baseUrl(baseUrl).build();
     }
 
     @Override

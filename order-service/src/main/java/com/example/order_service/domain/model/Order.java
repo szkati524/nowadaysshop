@@ -30,12 +30,12 @@ public class Order {
     }
     public void markAsCompleted(){
         if (this.status == OrderStatus.CANCELLED){
-            throw new IllegalStateException("Nie można sfinalizować amówienia ");
+            throw new IllegalStateException("Nie można sfinalizować zamówienia ");
         }
         this.status = OrderStatus.COMPLETED;
     }
     public void markAsCancelled() {
-        if (this.status == OrderStatus.CANCELLED) {
+        if (this.status == OrderStatus.COMPLETED) {
             throw new IllegalStateException("Nie można anulować już sfinalizowanego zamówienia");
         }
         this.status = OrderStatus.CANCELLED;
