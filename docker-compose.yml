@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   postgres:
     image: postgres:16-alpine
     container_name: shop-postgres
@@ -11,7 +10,7 @@ services:
     environment:
       POSTGRES_USER: shop_user
       POSTGRES_PASSWORD: shop_password
-      POSTGRES_MULTIPLE_DATABASES: "user_db,catalog_db"  
+      POSTGRES_MULTIPLE_DATABASES: "user_db,catalog_db"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh:ro
@@ -32,18 +31,18 @@ services:
     environment:
       CASSANDRA_CLUSTER_NAME: "ShopCluster"
       CASSANDRA_DC: "datacenter1"
-      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch" 
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
       MAX_HEAP_SIZE: "512M"
       HEAP_NEWSIZE: "100M"
     volumes:
-      - cassandra_data:/var/lib/cassandra 
+      - cassandra_data:/var/lib/cassandra
     networks:
       - shop-network
     healthcheck:
       test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
       interval: 15s
       timeout: 10s
-      retries: 10 
+      retries: 10
       start_period: 40s
 
   rabbitmq:
@@ -57,11 +56,11 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq 
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - shop-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"] 
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -71,10 +70,12 @@ services:
     container_name: shop-pgadmin
     restart: unless-stopped
     ports:
-      - "5050:80"  
+      - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@shop.local
+      PGADMIN_DEFAULT_EMAIL: admin@shop.com
       PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DISABLE_POSTFIX: "true"
+      PGADMIN_LISTEN_PORT: 80
     networks:
       - shop-network
     depends_on:

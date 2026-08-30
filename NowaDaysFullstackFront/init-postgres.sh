@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shebang – 
+# Shebang – informuje system, że plik ma zostać wykonany w powłoce Bash.[cite: 2]
 
 set -e
 
