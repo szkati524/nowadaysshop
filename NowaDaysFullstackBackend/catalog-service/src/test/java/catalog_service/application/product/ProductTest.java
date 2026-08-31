@@ -22,37 +22,39 @@ public class ProductTest {
                 "Klawiatura Mechaniczna",
                 "Opis klawiatury",
                 new BigDecimal("299.99"),
-                10
+                10,
+                "ELECTRONICS"
         );
     }
 
     @Test
+    void shouldCreateProductWithCategorySuccessfullyTest() {
+        assertEquals("ELECTRONICS", product.getCategory());
+    }
 
+    @Test
     void shouldThrowExceptionWhenPriceIsNegativeTest() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new Product(UUID.randomUUID(), "Test", "Opis", new BigDecimal("-10.00"), 5)
+                () -> new Product(UUID.randomUUID(), "Test", "Opis", new BigDecimal("-10.00"), 5, "ELECTRONICS")
         );
     }
 
     @Test
-
     void shouldThrowExceptionWhenStockIsNegativeTest() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new Product(UUID.randomUUID(), "Test", "Opis", new BigDecimal("10.00"), -5)
+                () -> new Product(UUID.randomUUID(), "Test", "Opis", new BigDecimal("10.00"), -5, "ELECTRONICS")
         );
     }
 
     @Test
-
     void shouldReserveStockSuccessfullyTest() {
         product.reserveStock(3);
         assertEquals(7, product.getStockQuantity());
     }
 
     @Test
-
     void shouldThrowExceptionWhenReservingMoreThanAvailableTest() {
         InsufficientStockException exception = assertThrows(
                 InsufficientStockException.class,
@@ -64,7 +66,6 @@ public class ProductTest {
 
     @ParameterizedTest
     @ValueSource(ints = {0, -1, -5})
-
     void shouldThrowExceptionWhenReservingInvalidQuantityTest(int invalidQuantity) {
         assertThrows(
                 IllegalArgumentException.class,
@@ -73,7 +74,6 @@ public class ProductTest {
     }
 
     @Test
-
     void shouldAddStockSuccessfullyTest() {
         product.addStock(5);
         assertEquals(15, product.getStockQuantity());
@@ -81,7 +81,6 @@ public class ProductTest {
 
     @ParameterizedTest
     @ValueSource(ints = {0, -1, -10})
-
     void shouldThrowExceptionWhenAddingInvalidQuantityTest(int invalidQuantity) {
         assertThrows(
                 IllegalArgumentException.class,
@@ -89,4 +88,3 @@ public class ProductTest {
         );
     }
 }
-

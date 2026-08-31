@@ -3,6 +3,8 @@ import catalog_service.application.ports.out.ProductRepositoryPort;
 import catalog_service.domain.exception.ProductNotFoundException;
 import catalog_service.domain.model.Product;
 import catalog_service.domain.service.InventoryDomainService;
+import catalog_service.infrastructure.adapters.in.web.dto.PagedResult;
+import catalog_service.infrastructure.adapters.in.web.dto.ProductSearchQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,39 +43,34 @@ public class ProductApplicationServiceTest {
                 "Monitor 4K",
                 "Opis monitora",
                 new BigDecimal("1200.00"),
-                15
+                15,
+                "ELECTRONICS"
         );
     }
 
     @Test
-
     void shouldCreateProductSuccessfullyTest() {
-
         when(productRepositoryPort.save(any(Product.class))).thenReturn(sampleProduct);
-
 
         Product createdProduct = productApplicationService.createProduct(
                 "Monitor 4K",
                 "Opis monitora",
                 new BigDecimal("1200.00"),
-                15
+                15,
+                "ELECTRONICS"
         );
-
 
         assertNotNull(createdProduct);
         assertEquals("Monitor 4K", createdProduct.getName());
+        assertEquals("ELECTRONICS", createdProduct.getCategory());
         verify(productRepositoryPort, times(1)).save(any(Product.class));
     }
 
     @Test
-
     void shouldGetProductByIdTest() {
-
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(sampleProduct));
 
-
         Product foundProduct = productApplicationService.getProductById(productId);
-
 
         assertNotNull(foundProduct);
         assertEquals(productId, foundProduct.getId());
@@ -81,12 +78,9 @@ public class ProductApplicationServiceTest {
     }
 
     @Test
-
     void shouldThrowExceptionWhenProductNotFoundByIdTest() {
-
         UUID nonExistingId = UUID.randomUUID();
         when(productRepositoryPort.findById(nonExistingId)).thenReturn(Optional.empty());
-
 
         ProductNotFoundException exception = assertThrows(
                 ProductNotFoundException.class,
@@ -98,30 +92,28 @@ public class ProductApplicationServiceTest {
     }
 
     @Test
+    void shouldSearchProductsSuccessfullyTest() {
+        ProductSearchQuery query = new ProductSearchQuery(
+                "Monitor", "ELECTRONICS", null, null, 0, 10, "name", "asc"
+        );
+        PagedResult<Product> pagedResult = new PagedResult<>(List.of(sampleProduct), 0, 1, 1);
 
-    void shouldGetAllProductsTest() {
+        when(productRepositoryPort.searchProducts(query)).thenReturn(pagedResult);
 
-        when(productRepositoryPort.findAll()).thenReturn(List.of(sampleProduct));
+        PagedResult<Product> result = productApplicationService.searchProducts(query);
 
-
-        List<Product> products = productApplicationService.getAllProduct();
-
-
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        verify(productRepositoryPort, times(1)).findAll();
+        assertNotNull(result);
+        assertEquals(1, result.totalElements());
+        assertEquals("Monitor 4K", result.content().get(0).getName());
+        verify(productRepositoryPort, times(1)).searchProducts(query);
     }
 
     @Test
-
     void shouldReserveStockSuccessfullyTest() {
-
         int quantityToReserve = 5;
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(sampleProduct));
 
-
         productApplicationService.reserveStock(productId, quantityToReserve);
-
 
         verify(productRepositoryPort, times(1)).findById(productId);
         verify(inventoryDomainService, times(1)).processStockReservation(sampleProduct, quantityToReserve);
@@ -129,20 +121,15 @@ public class ProductApplicationServiceTest {
     }
 
     @Test
-
     void shouldAddStockSuccessfullyTest() {
-
         int quantityToAdd = 10;
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(sampleProduct));
 
-
         productApplicationService.addStock(productId, quantityToAdd);
-
 
         verify(productRepositoryPort, times(1)).findById(productId);
         verify(inventoryDomainService, times(1)).processStockRestock(sampleProduct, quantityToAdd);
         verify(productRepositoryPort, times(1)).save(sampleProduct);
     }
 }
-
 

@@ -44,7 +44,7 @@ public class ProductPersistenceAdaptersTest {
 
     @Test
     void shouldSaveAndFindProductInPostgres(){
-        Product product = new Product(UUID.randomUUID(),"Klawiatura","Mechaniczna", BigDecimal.valueOf(250),15);
+        Product product = new Product(UUID.randomUUID(),"Klawiatura","Mechaniczna", BigDecimal.valueOf(250),15,"IT");
         productPersistenceAdapter.save(product);
         Optional<Product> foundProduct = productPersistenceAdapter.findById(product.getId());
         assertTrue(foundProduct.isPresent());

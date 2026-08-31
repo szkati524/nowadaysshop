@@ -32,6 +32,8 @@ public class ProductEntity {
 
     @Column(nullable = false)
     private Integer stockQuantity;
+    @Column(nullable = false)
+    private String category;
 
 
 }

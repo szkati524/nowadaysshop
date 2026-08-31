@@ -23,24 +23,20 @@ public class InventoryDomainServiceTest {
                 "Mysz Bezprzewodowa",
                 "Bezprzewodowa mysz optyczna",
                 new BigDecimal("150.00"),
-                20
+                20,
+                "ELECTRONICS"
         );
     }
 
     @Test
-
     void shouldProcessStockReservationTest() {
-
         inventoryDomainService.processStockReservation(testProduct, 5);
-
 
         assertEquals(15, testProduct.getStockQuantity());
     }
 
     @Test
-
     void shouldThrowExceptionOnInsufficientStockDuringReservationTest() {
-
         assertThrows(
                 InsufficientStockException.class,
                 () -> inventoryDomainService.processStockReservation(testProduct, 25)
@@ -48,13 +44,9 @@ public class InventoryDomainServiceTest {
     }
 
     @Test
-
     void shouldProcessStockRestockTest() {
-
         inventoryDomainService.processStockRestock(testProduct, 10);
-
 
         assertEquals(30, testProduct.getStockQuantity());
     }
 }
-

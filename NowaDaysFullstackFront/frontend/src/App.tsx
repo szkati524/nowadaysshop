@@ -8,10 +8,13 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { OrderHistoryPage } from './pages/OrderHistoryPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
+import { CartProvider } from './context/CartContext';
+
 
 function App() {
   return (
     <AuthProvider>
+      <CartProvider>
       <Router>
         <div className="min-h-screen bg-slate-50 text-slate-900">
           <Navbar />
@@ -22,10 +25,11 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="order-history" element={<OrderHistoryPage />} />
-            <Route path="product-details" element = {<ProductDetailsPage />} />
+            <Route path="/products/:id" element = {<ProductDetailsPage />} />
           </Routes>
         </div>
       </Router>
+      </CartProvider>
     </AuthProvider>
   );
 }

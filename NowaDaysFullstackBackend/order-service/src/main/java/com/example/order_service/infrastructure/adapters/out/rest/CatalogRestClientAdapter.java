@@ -3,6 +3,8 @@ package com.example.order_service.infrastructure.adapters.out.rest;
 import com.example.order_service.application.ports.out.CatalogClientPort;
 import com.example.order_service.application.ports.out.dto.ProductResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -15,7 +17,20 @@ public class CatalogRestClientAdapter implements CatalogClientPort {
     public CatalogRestClientAdapter(
             RestClient.Builder builder,
             @Value("${services.catalog.url:http://CATALOG-SERVICE}") String baseUrl) {
-        this.restClient = builder.baseUrl(baseUrl).build();
+
+        this.restClient = builder
+                .baseUrl(baseUrl)
+                .requestInterceptor((request, body, execution) -> {
+
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                    if (authentication != null && authentication.getCredentials() != null) {
+                        String token = authentication.getCredentials().toString();
+                        request.getHeaders().setBearerAuth(token);
+                    }
+                    return execution.execute(request, body);
+                })
+                .build();
     }
 
     @Override

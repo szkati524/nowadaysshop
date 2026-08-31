@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import { FiShoppingBag, FiCalendar, FiPackage, FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiShoppingBag, FiCalendar, FiPackage, FiAlertCircle } from 'react-icons/fi';
 
 interface OrderItem {
   id: string;
@@ -21,21 +21,26 @@ export const OrderHistoryPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setLoading(true);
-   
+    setError(null);
+
     api.get<OrderItem[]>(`/orders/user/${user.id}`)
       .then((res) => {
-       
-        const sortedOrders = res.data.sort((a, b) => 
+        const data = Array.isArray(res.data) ? res.data : [];
+        const sortedOrders = data.sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setOrders(sortedOrders);
       })
       .catch((err) => {
         console.error('Błąd podczas pobierania historii zamówień:', err);
-        setError('Nie udało się pobrać historii zamówień.');
+        if (err.response?.status === 403) {
+          setError('Brak uprawnień. Zaloguj się ponownie.');
+        } else {
+          setError('Nie udało się pobrać historii zamówień.');
+        }
       })
       .finally(() => setLoading(false));
   }, [user]);
@@ -88,7 +93,6 @@ export const OrderHistoryPage: React.FC = () => {
               key={order.id}
               className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-             
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-800 text-lg">
@@ -102,26 +106,25 @@ export const OrderHistoryPage: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
                     <FiCalendar />
-                    {new Date(order.createdAt).toLocaleDateString('pl-PL', {
+                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString('pl-PL', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
-                    })}
+                    }) : 'Brak daty'}
                   </span>
                   <span className="flex items-center gap-1 font-mono">
-                    ID: {order.id.substring(0, 8)}...
+                    ID: {order.id?.substring(0, 8)}...
                   </span>
                 </div>
               </div>
 
-              
               <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
                 <div className="text-left md:text-right">
                   <span className="block text-xs text-slate-400">Ilość: {order.quantity} szt.</span>
                   <span className="text-xl font-bold text-indigo-600">
-                    {order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'} PLN
+                    {(order.totalPrice ?? 0).toFixed(2)} PLN
                   </span>
                 </div>
               </div>

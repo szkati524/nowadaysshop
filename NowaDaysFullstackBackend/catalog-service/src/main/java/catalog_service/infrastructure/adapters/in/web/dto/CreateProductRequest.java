@@ -16,6 +16,9 @@ public record CreateProductRequest(
         BigDecimal price,
         @NotNull(message = "Stan początkowy jest wymagany")
         @Min(value = 0,message = "Stan początkowy nie może być ujemny")
-        Integer initialStock
+        Integer initialStock,
+        @NotNull(message = "Kategoria musi być podana")
+        String category
 ) {
+
 }

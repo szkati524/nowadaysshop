@@ -39,7 +39,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     }
     private OrderEntity mapToEntity(Order order){
         return new OrderEntity(
-                order.getId(),
+                order.getId() != null ? order.getId() : UUID.randomUUID(),
                 order.getUserId(),
                 order.getProductId(),
                 order.getQuantity(),

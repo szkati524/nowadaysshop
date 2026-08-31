@@ -44,6 +44,7 @@ public class JwtUtils {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e){
+            System.err.println("Błąd walidacji JWT: " + e.getMessage());
             return false;
         }
     }

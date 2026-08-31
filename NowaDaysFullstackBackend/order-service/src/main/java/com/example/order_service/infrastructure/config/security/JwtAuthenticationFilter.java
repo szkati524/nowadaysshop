@@ -20,35 +20,44 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-
     private final JwtUtils jwtUtils;
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         String token = parseJwt(request);
-        if (token != null && jwtUtils.validateToken(token)){
-            String username = jwtUtils.getUsernameFromToken(token);
+
+        if (token != null && jwtUtils.validateToken(token)) {
+
+            String userId = jwtUtils.getUsernameFromToken(token);
             String role = jwtUtils.getRoleFromToken(token);
+
+            if (role == null || role.isBlank()) {
+                role = "ROLE_USER";
+            } else if (!role.startsWith("ROLE_")) {
+                role = "ROLE_" + role;
+            }
+
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    username,
-                    null,
-                    Collections.singletonList(new SimpleGrantedAuthority(role != null ? role : "ROLE_USER"))
+                    userId,
+                    token,
+                    Collections.singletonList(new SimpleGrantedAuthority(role))
             );
+
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
         }
-        filterChain.doFilter(request,response);
 
+        filterChain.doFilter(request, response);
     }
-    private String parseJwt(HttpServletRequest request){
+
+    private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")){
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }
         return null;
     }
 }
-
-

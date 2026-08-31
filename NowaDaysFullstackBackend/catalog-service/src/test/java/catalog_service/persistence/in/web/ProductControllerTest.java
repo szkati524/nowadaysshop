@@ -4,6 +4,8 @@ import catalog_service.config.security.JwtAuthenticationFilter;
 import catalog_service.config.security.JwtUtils;
 import catalog_service.config.security.SecurityConfig;
 import catalog_service.infrastructure.adapters.in.web.ProductController;
+import catalog_service.infrastructure.adapters.in.web.dto.PagedResult;
+import catalog_service.infrastructure.adapters.in.web.dto.ProductSearchQuery;
 import catalog_service.infrastructure.adapters.in.web.exception.GlobalExceptionHandler;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import catalog_service.application.ports.in.ProductUseCase;
@@ -40,137 +42,144 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({SecurityConfig.class, JwtAuthenticationFilter.class, GlobalExceptionHandler.class})
 public class ProductControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockBean
-    private ProductUseCase productUseCase;
+        @MockBean
+        private ProductUseCase productUseCase;
 
-    @MockBean
-    private JwtUtils jwtUtils;
+        @MockBean
+        private JwtUtils jwtUtils;
 
-    private Product sampleProduct;
-    private UUID productId;
+        private Product sampleProduct;
+        private UUID productId;
 
-    @BeforeEach
-    void setUp() {
-        productId = UUID.randomUUID();
-        sampleProduct = new Product(
-                productId,
-                "Słuchawki BT",
-                "Słuchawki bezprzewodowe z ANC",
-                new BigDecimal("499.00"),
-                30
-        );
+        @BeforeEach
+        void setUp() {
+            productId = UUID.randomUUID();
+            sampleProduct = new Product(
+                    productId,
+                    "Słuchawki BT",
+                    "Słuchawki bezprzewodowe z ANC",
+                    new BigDecimal("499.00"),
+                    30,
+                    "ELECTRONICS"
+            );
+        }
+
+        @Test
+        void shouldGetAllProductsWithoutAuthenticationTest() throws Exception {
+            when(productUseCase.getAllProduct()).thenReturn(List.of(sampleProduct));
+
+            mockMvc.perform(get("/api/products"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].id").value(productId.toString()))
+                    .andExpect(jsonPath("$[0].name").value("Słuchawki BT"))
+                    .andExpect(jsonPath("$[0].category").value("ELECTRONICS"));
+        }
+
+        @Test
+        void shouldSearchProductsWithoutAuthenticationTest() throws Exception {
+            PagedResult<Product> pagedResult = new PagedResult<>(List.of(sampleProduct), 0, 1, 1);
+            when(productUseCase.searchProducts(any(ProductSearchQuery.class))).thenReturn(pagedResult);
+
+            mockMvc.perform(get("/api/products/search")
+                            .param("name", "Słuchawki")
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[0].id").value(productId.toString()))
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.totalPages").value(1));
+        }
+
+        @Test
+        void shouldGetProductByIdWithoutAuthenticationTest() throws Exception {
+            when(productUseCase.getProductById(productId)).thenReturn(sampleProduct);
+
+            mockMvc.perform(get("/api/products/{id}", productId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(productId.toString()))
+                    .andExpect(jsonPath("$.name").value("Słuchawki BT"));
+        }
+
+        @Test
+        void shouldReturn404WhenProductNotFoundTest() throws Exception {
+            when(productUseCase.getProductById(productId))
+                    .thenThrow(new ProductNotFoundException("Nie znaleziono produktu"));
+
+            mockMvc.perform(get("/api/products/{id}", productId))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void shouldReturn401WhenCreatingProductWithoutAuthTest() throws Exception {
+            CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5, "ELECTRONICS");
+
+            mockMvc.perform(post("/api/products")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "USER")
+        void shouldReturn403WhenCreatingProductAsUserRoleTest() throws Exception {
+            CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5, "ELECTRONICS");
+
+            mockMvc.perform(post("/api/products")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void shouldCreateProductAsAdminTest() throws Exception {
+            CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5, "ELECTRONICS");
+            when(productUseCase.createProduct(any(), any(), any(), any(), any())).thenReturn(sampleProduct);
+
+            mockMvc.perform(post("/api/products")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(productId.toString()));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void shouldReturn400WhenCreateProductRequestIsInvalidTest() throws Exception {
+            CreateProductRequest invalidRequest = new CreateProductRequest("", "Opis", new BigDecimal("-100.00"), -5, "ELECTRONICS");
+
+            mockMvc.perform(post("/api/products")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest());
+
+            verify(productUseCase, never()).createProduct(any(), any(), any(), any(), any());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void shouldReserveStockAsAdminTest() throws Exception {
+            ReserveStockRequest request = new ReserveStockRequest(5);
+
+            mockMvc.perform(post("/api/products/{id}/reserve", productId)
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk());
+
+            verify(productUseCase, times(1)).reserveStock(eq(productId), eq(5));
+        }
     }
 
 
-
-    @Test
-
-    void shouldGetAllProductsWithoutAuthenticationTest() throws Exception {
-        when(productUseCase.getAllProduct()).thenReturn(List.of(sampleProduct));
-
-        mockMvc.perform(get("/api/products"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(productId.toString()))
-                .andExpect(jsonPath("$[0].name").value("Słuchawki BT"));
-    }
-
-    @Test
-
-    void shouldGetProductByIdWithoutAuthenticationTest() throws Exception {
-        when(productUseCase.getProductById(productId)).thenReturn(sampleProduct);
-
-        mockMvc.perform(get("/api/products/{id}", productId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(productId.toString()))
-                .andExpect(jsonPath("$.name").value("Słuchawki BT"));
-    }
-
-    @Test
-
-    void shouldReturn404WhenProductNotFoundTest() throws Exception {
-        when(productUseCase.getProductById(productId))
-                .thenThrow(new ProductNotFoundException("Nie znaleziono produktu"));
-
-        mockMvc.perform(get("/api/products/{id}", productId))
-                .andExpect(status().isNotFound());
-    }
-
-
-
-    @Test
-
-    void shouldReturn403WhenCreatingProductWithoutAuthTest() throws Exception {
-        CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5);
-
-        mockMvc.perform(post("/api/products")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @WithMockUser(roles = "USER")
-
-    void shouldReturn403WhenCreatingProductAsUserRoleTest() throws Exception {
-        CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5);
-
-        mockMvc.perform(post("/api/products")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-
-    void shouldCreateProductAsAdminTest() throws Exception {
-        CreateProductRequest request = new CreateProductRequest("Laptop", "Opis", new BigDecimal("3000.00"), 5);
-        when(productUseCase.createProduct(any(), any(), any(), any())).thenReturn(sampleProduct);
-
-        mockMvc.perform(post("/api/products")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(productId.toString()));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-
-    void shouldReturn400WhenCreateProductRequestIsInvalidTest() throws Exception {
-        CreateProductRequest invalidRequest = new CreateProductRequest("", "Opis", new BigDecimal("-100.00"), -5);
-
-        mockMvc.perform(post("/api/products")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
-
-        verify(productUseCase, never()).createProduct(any(), any(), any(), any());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-
-    void shouldReserveStockAsAdminTest() throws Exception {
-        ReserveStockRequest request = new ReserveStockRequest(5);
-
-        mockMvc.perform(post("/api/products/{id}/reserve", productId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(productUseCase, times(1)).reserveStock(eq(productId), eq(5));
-    }
-}
 

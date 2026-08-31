@@ -13,13 +13,13 @@ public class OrderDomainService {
     public Order createPendingOrder(UUID userId, UUID productId, Integer quantity, BigDecimal unitPrice){
         BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
         return new Order(
-                null,
+                UUID.randomUUID(),
                 userId,
                 productId,
                 quantity,
                 totalPrice,
                 OrderStatus.PENDING,
-               null
+               Instant.now()
 
         );
     }

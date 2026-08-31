@@ -9,7 +9,9 @@ import jakarta.persistence.Table;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -25,34 +27,35 @@ public class ProductApplicationServiceTest {
 
     @Mock
     private ProductRepositoryPort productRepositoryPort;
+
+    @Spy
+    private InventoryDomainService inventoryDomainService = new InventoryDomainService();
+
+    @InjectMocks
     private ProductApplicationService productApplicationService;
 
-    @BeforeEach
-    void setUp(){
-        InventoryDomainService inventoryDomainService = new InventoryDomainService();
-        productApplicationService = new ProductApplicationService(productRepositoryPort,inventoryDomainService);
-
-    }
     @Test
-    void shouldReserveStockSuccessfullyTest(){
+    void shouldReserveStockSuccessfullyTest() {
         UUID productId = UUID.randomUUID();
-        Product product = new Product(productId,"Laptop","Gaming Laptop", BigDecimal.valueOf(3500),10);
+        Product product = new Product(productId, "Laptop", "Gaming Laptop", BigDecimal.valueOf(3500), 10, "ELECTRONICS");
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(product));
 
-        productApplicationService.reserveStock(productId,3);
-        assertEquals(7,product.getStockQuantity());
-        verify(productRepositoryPort,times(1)).save(product);
+        productApplicationService.reserveStock(productId, 3);
+
+        assertEquals(7, product.getStockQuantity());
+        verify(productRepositoryPort, times(1)).save(product);
     }
+
     @Test
-    void shouldThrowExceptionWhenNotEnoughStockTest(){
+    void shouldThrowExceptionWhenNotEnoughStockTest() {
         UUID productId = UUID.randomUUID();
-        Product product = new Product(productId,"Myszka","Myszka bezprzewodowa",BigDecimal.valueOf(100),2);
+        Product product = new Product(productId, "Myszka", "Myszka bezprzewodowa", BigDecimal.valueOf(100), 2, "ELECTRONICS");
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(product));
 
         assertThrows(InsufficientStockException.class, () -> {
-            productApplicationService.reserveStock(productId,5);
-
+            productApplicationService.reserveStock(productId, 5);
         });
-        verify(productRepositoryPort,never()).save(product);
+
+        verify(productRepositoryPort, never()).save(product);
     }
 }

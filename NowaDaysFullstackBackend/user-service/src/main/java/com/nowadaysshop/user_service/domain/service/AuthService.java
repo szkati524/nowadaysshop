@@ -21,8 +21,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
-    public String register(String email,String firstName,String lastName,String rawPassword){
-        if (userRepository.existsByEmail(email)){
+    public String register(String email, String firstName, String lastName, String rawPassword) {
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Użytkownik o podanym adresie e-mail już istnieje!");
         }
         String encodedPassword = passwordEncoder.encode(rawPassword);
@@ -40,13 +40,23 @@ public class AuthService {
         userRepository.save(entity);
         return "Użytkownik zarejestrowany pomyślnie!";
     }
-    public String login(String email,String rawPassword){
+
+    public String login(String email, String rawPassword) {
         UserEntity entity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Nieprawidłowy e-mail lub hasło"));
 
-        if (!passwordEncoder.matches(rawPassword, entity.getPassword())){
+        if (!passwordEncoder.matches(rawPassword, entity.getPassword())) {
             throw new IllegalArgumentException("Nieprawidłowy e-mail lub hasło");
         }
-        return jwtUtils.generateToken(entity.getId(),entity.getRole());
+
+
+        String userRole = entity.getRole();
+        if (userRole == null || userRole.isBlank()) {
+            userRole = "ROLE_USER";
+        } else if (!userRole.startsWith("ROLE_")) {
+            userRole = "ROLE_" + userRole;
+        }
+
+        return jwtUtils.generateToken(entity.getId(), userRole);
     }
 }

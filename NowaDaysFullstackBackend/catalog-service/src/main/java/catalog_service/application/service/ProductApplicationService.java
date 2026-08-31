@@ -5,6 +5,8 @@ import catalog_service.application.ports.out.ProductRepositoryPort;
 import catalog_service.domain.exception.ProductNotFoundException;
 import catalog_service.domain.model.Product;
 import catalog_service.domain.service.InventoryDomainService;
+import catalog_service.infrastructure.adapters.in.web.dto.PagedResult;
+import catalog_service.infrastructure.adapters.in.web.dto.ProductSearchQuery;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,15 +22,22 @@ public class ProductApplicationService implements ProductUseCase {
     }
 
     @Override
-    public Product createProduct(String name, String description, BigDecimal price, Integer initialStock) {
-       Product product = new Product(null,name,description,price,initialStock);
+    public Product createProduct(String name, String description, BigDecimal price, Integer initialStock, String category) {
+       Product product = new Product(null,name,description,price,initialStock,category);
        return productRepositoryPort.save(product);
     }
+
+
+
 
     @Override
     public Product getProductById(UUID id) {
         return productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Nie znaleziono produktu o ID: " + id));
+    }
+    @Override
+    public PagedResult<Product> searchProducts(ProductSearchQuery query) {
+        return productRepositoryPort.searchProducts(query);
     }
 
     @Override

@@ -10,9 +10,12 @@ public class Product {
     private String name;
     private String description;
     private BigDecimal price;
+
     private Integer stockQuantity;
 
-    public Product(UUID id, String name, String description, BigDecimal price, Integer stockQuantity) {
+    private String category;
+
+    public Product(UUID id, String name, String description, BigDecimal price, Integer stockQuantity,String category) {
         if (price != null && price.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Cena nie może być ujemna");
         }
@@ -25,6 +28,7 @@ public class Product {
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity != null ? stockQuantity : 0;
+        this.category = category;
     }
     public void reserveStock(int quantity){
         if (quantity <= 0){
@@ -65,5 +69,9 @@ public void addStock(int quantity){
 
     public Integer getStockQuantity() {
         return stockQuantity;
+    }
+
+    public String getCategory() {
+        return category;
     }
 }
