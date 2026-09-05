@@ -2,15 +2,17 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { FiShoppingCart, FiUser, FiLogOut, FiCreditCard, FiMail } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiCreditCard, FiMail, FiPlus } from 'react-icons/fi';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
 
-  
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'ROLE_ADMIN' || user?.role?.includes('ADMIN');
 
   return (
     <nav className="bg-slate-900 text-white p-4 shadow-md">
@@ -27,6 +29,16 @@ export const Navbar: React.FC = () => {
 
           {user ? (
             <>
+        
+              {isAdmin && (
+                <Link
+                  to="/add-product"
+                  className="flex items-center gap-1 text-amber-400 hover:text-amber-300 font-medium border border-amber-400/40 px-3 py-1 rounded-lg hover:border-amber-300 transition"
+                >
+                  <FiPlus /> Dodaj produkt
+                </Link>
+              )}
+
               <Link to="/order-history" className="hover:text-indigo-300 flex items-center gap-1 relative">
                 <FiShoppingCart /> 
                 <span>Zamówienia</span>
@@ -49,7 +61,7 @@ export const Navbar: React.FC = () => {
                 </span>
                 <span className="text-slate-400">|</span>
                 <span className="flex items-center gap-1">
-                  <FiUser /> {user.username || user.email}
+                  <FiUser /> {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
                 </span>
               </Link>
 

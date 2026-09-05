@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { CartItem, Product } from '../types';
+import { useAuth } from './AuthContext'; 
 
 interface CartContextType {
   cart: CartItem[];
@@ -12,14 +13,23 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('shopping_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user } = useAuth(); 
+
+
+  const cartKey = user?.id ? `shopping_cart_${user.id}` : 'shopping_cart_guest';
+
+  const [cart, setCart] = useState<CartItem[]>([]);
+
 
   useEffect(() => {
-    localStorage.setItem('shopping_cart', JSON.stringify(cart));
-  }, [cart]);
+    const saved = localStorage.getItem(cartKey);
+    setCart(saved ? JSON.parse(saved) : []);
+  }, [cartKey]);
+
+
+  useEffect(() => {
+    localStorage.setItem(cartKey, JSON.stringify(cart));
+  }, [cart, cartKey]);
 
   const addToCart = (product: Product, quantity = 1) => {
     setCart(prev => {
@@ -28,7 +38,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return prev.map(item =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
-            : item
+            : { ...item }
         );
       }
       return [...prev, { product, quantity }];

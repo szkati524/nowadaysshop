@@ -4,13 +4,14 @@ import type { Product, PagedResult } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
-
-const CATEGORIES = ['ELECTRONICS', 'BOOKS', 'CLOTHING', 'HOME', 'SPORT'];
+import { useAuth } from '../context/AuthContext';
 
 export const ShopPage: React.FC = () => {
   const [pagedResult, setPagedResult] = useState<PagedResult<Product> | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
+
+  const [categories, setCategories] = useState<string[]>([]);
 
   const [searchName, setSearchName] = useState('');
   const [category, setCategory] = useState('');
@@ -20,6 +21,14 @@ export const ShopPage: React.FC = () => {
 
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
+
+
+  useEffect(() => {
+    api.get<string[]>('/products/categories')
+      .then(res => setCategories(res.data))
+      .catch(err => console.error('Błąd pobierania kategorii:', err));
+  }, []);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -45,11 +54,20 @@ export const ShopPage: React.FC = () => {
     fetchProducts();
   };
 
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    addToCart(product);
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6 text-slate-800">Katalog Produktów</h1>
 
-    
       <form onSubmit={handleSearchSubmit} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-8 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <input
@@ -64,13 +82,14 @@ export const ShopPage: React.FC = () => {
           </button>
         </div>
 
+    
         <select
           value={category}
           onChange={(e) => { setCategory(e.target.value); setPage(0); }}
           className="border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
         >
           <option value="">Wszystkie kategorie</option>
-          {CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
@@ -95,12 +114,11 @@ export const ShopPage: React.FC = () => {
 
         <button
           type="submit"
-          className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+          className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition cursor-pointer"
         >
           Filtruj
         </button>
       </form>
-
 
       {loading ? (
         <div className="p-8 text-center text-slate-500">Ładowanie produktów...</div>
@@ -128,11 +146,8 @@ export const ShopPage: React.FC = () => {
                 <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-100">
                   <span className="text-lg font-bold text-indigo-600">{product.price.toFixed(2)} PLN</span>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCart(product);
-                    }}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700 transition"
+                    onClick={(e) => handleAddToCart(e, product)}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700 transition cursor-pointer"
                   >
                     Do koszyka
                   </button>
@@ -141,13 +156,13 @@ export const ShopPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Kontrolki Paginacji */}
+          
           {pagedResult && pagedResult.totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-6">
               <button
                 disabled={page === 0}
                 onClick={() => setPage(prev => prev - 1)}
-                className="p-2 border rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                className="p-2 border rounded-lg disabled:opacity-50 hover:bg-slate-50 cursor-pointer"
               >
                 <FiChevronLeft className="w-5 h-5" />
               </button>
@@ -157,7 +172,7 @@ export const ShopPage: React.FC = () => {
               <button
                 disabled={page + 1 >= pagedResult.totalPages}
                 onClick={() => setPage(prev => prev + 1)}
-                className="p-2 border rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                className="p-2 border rounded-lg disabled:opacity-50 hover:bg-slate-50 cursor-pointer"
               >
                 <FiChevronRight className="w-5 h-5" />
               </button>

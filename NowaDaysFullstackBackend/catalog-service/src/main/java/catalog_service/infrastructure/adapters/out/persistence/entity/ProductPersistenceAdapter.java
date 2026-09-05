@@ -81,6 +81,12 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
         );
     }
 
+    @Override
+    public List<String> findDistinctCategories() {
+        return repository.findDistinctCategories();
+    }
+
+
     private ProductEntity mapToEntity(Product product){
         return new ProductEntity(
                 product.getId(),

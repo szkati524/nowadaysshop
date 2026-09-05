@@ -19,4 +19,5 @@ public interface ProductUseCase  {
     List<Product> getAllProduct();
     void reserveStock(UUID productId,int quantity);
     void addStock(UUID productId,int quantity);
+    List<String> getDistinctCategories();
 }

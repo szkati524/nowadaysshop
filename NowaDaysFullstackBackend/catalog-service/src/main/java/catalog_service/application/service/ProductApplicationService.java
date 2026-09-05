@@ -58,4 +58,9 @@ Product product = getProductById(productId);
 inventoryDomainService.processStockRestock(product,quantity);
 productRepositoryPort.save(product);
     }
+
+    @Override
+    public List<String> getDistinctCategories() {
+        return productRepositoryPort.findDistinctCategories();
+    }
 }

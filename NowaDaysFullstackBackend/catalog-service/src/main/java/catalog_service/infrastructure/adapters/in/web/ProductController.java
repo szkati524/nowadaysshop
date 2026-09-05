@@ -73,5 +73,9 @@ public class ProductController {
         PagedResult<Product> result = productUseCase.searchProducts(query);
         return ResponseEntity.ok(result);
     }
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories(){
+        return ResponseEntity.ok(productUseCase.getDistinctCategories());
+    }
 
 }

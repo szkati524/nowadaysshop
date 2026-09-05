@@ -9,6 +9,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { OrderHistoryPage } from './pages/OrderHistoryPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { CartProvider } from './context/CartContext';
+import { AddProduct } from './pages/AddProductPage';
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="order-history" element={<OrderHistoryPage />} />
             <Route path="/products/:id" element = {<ProductDetailsPage />} />
+            <Route path ="/add-product" element={<AddProduct />} />
           </Routes>
         </div>
       </Router>
