@@ -1,3 +1,55 @@
-# Default ignored files
+# ==================================
+# Build & Compiled files
+# ==================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ==================================
+# IntelliJ IDEA
+# ==================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
 /shelf/
 /workspace.xml
+
+# ==================================
+# Eclipse
+# ==================================
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.pptx
+.project
+.classpreference
+.targetpreference
+.settings/
+
+# ==================================
+# VS Code
+# ==================================
+.vscode/
+
+# ==================================
+# Logs & Database / Local env
+# ==================================
+*.log
+*.sqlite
+.env
+.env.local
+
+# ==================================
+# OS generated files
+# ==================================
+.DS_Store
+Thumbs.db

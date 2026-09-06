@@ -1,6 +1,7 @@
 package com.nowadaysshop.user_service.application.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nowadaysshop.user_service.config.security.JwtAuthFilter;
 import com.nowadaysshop.user_service.domain.service.AuthService;
 import com.nowadaysshop.user_service.infrastructure.adapters.in.rest.AuthController;
 import com.nowadaysshop.user_service.infrastructure.adapters.in.web.dto.LoginRequest;
@@ -34,6 +35,9 @@ public class AuthControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
 
     @MockBean
     private AuthService authService;

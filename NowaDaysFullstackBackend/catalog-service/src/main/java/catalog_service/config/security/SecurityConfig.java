@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/products/categories").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/products/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()

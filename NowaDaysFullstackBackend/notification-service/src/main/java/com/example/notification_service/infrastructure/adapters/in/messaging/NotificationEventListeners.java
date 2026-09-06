@@ -25,4 +25,8 @@ public class NotificationEventListeners {
         log.info("[E-MAIL SERVICE] Sending order confirmation email for Order ID: {} (User ID: {}, Amount: ${})",
                 event.orderId(), event.userId(), event.totalAmount());
     }
+    @RabbitListener(queues = RabbitMQConsumerConfig.DLQ_NAME)
+    public void handleDeadLetterMessage(Object failedMessage){
+        log.error("[DEAD LETTER QUEUE] Message failed processing and was moved to DLQ: {}", failedMessage);
+    }
 }

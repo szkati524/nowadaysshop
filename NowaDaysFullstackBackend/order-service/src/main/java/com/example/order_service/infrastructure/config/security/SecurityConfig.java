@@ -26,7 +26,7 @@ public class SecurityConfig {
 
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .anyRequest().authenticated()
